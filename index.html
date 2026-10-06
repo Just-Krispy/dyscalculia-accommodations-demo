@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Math Accommodations Demo — Quiz with built-in supports</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ================= SETUP (teacher) ================= -->
+<section id="setup-root" class="screen">
+  <header class="setup-head">
+    <h1>Math Quiz — Accommodations Demo</h1>
+    <p class="lede">A short math quiz with built-in supports for students with dyscalculia and other
+    math-learning differences. Pick a name, choose which accommodations to switch on, then start.</p>
+  </header>
+
+  <label class="field">
+    <span>Student name (optional)</span>
+    <input id="student-name" type="text" autocomplete="off" placeholder="e.g. Sam">
+  </label>
+
+  <h2 class="section-title">Accommodations</h2>
+  <p class="hint">Everything is on screen — no logins, nothing leaves this device. Recommended for
+  dyscalculia supports are pre-selected; uncheck anything you don't want.</p>
+  <div id="accom-setup" class="accom-grid" role="group" aria-label="Accommodation settings"></div>
+
+  <div class="setup-actions">
+    <button id="start-btn" class="btn btn-primary" type="button">Start quiz</button>
+    <button id="reset-btn" class="btn btn-ghost" type="button">Reset saved settings</button>
+  </div>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section id="app-root" class="screen" hidden>
+  <header id="app-header">
+    <div class="header-left">
+      <button id="drawer-toggle" class="btn btn-ghost" type="button" aria-expanded="false"
+              aria-controls="accom-root">Accommodations</button>
+      <div id="progress-root" class="progress-root" aria-live="polite"></div>
+    </div>
+    <div class="header-right">
+      <div id="timer-root" class="timer-root" aria-live="off"></div>
+      <button id="tts-play" class="btn btn-icon" type="button" title="Read aloud"
+              aria-label="Read the question aloud">🔊</button>
+    </div>
+  </header>
+
+  <div id="app-body">
+    <main id="quiz-root" aria-live="polite"></main>
+
+    <aside class="side">
+      <div id="scaffold-root"></div>
+      <div id="tools-root"></div>
+    </aside>
+
+    <aside id="accom-root" class="drawer" aria-hidden="true" aria-label="Accommodations"></aside>
+  </div>
+
+  <footer id="nav-root" class="nav-root"></footer>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section id="results-root" class="screen" hidden></section>
+
+<script src="js/store.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/scaffolds.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/reading.js"></script>
+<script src="js/tts.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/accommodations.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
