@@ -866,3 +866,35 @@ button.tool-head:hover { background: var(--panel-strong); }
   .results-card { padding: var(--sp-5) 1.25rem; border-radius: var(--radius); }
   .drawer { width: min(24rem, 100vw); }
 }
+
+/* ---------- graceful degradation: speech boundary events ---------- */
+/* Shown only when the browser never fires word-boundary events, so read-along can't track. */
+.boundary-warning {
+  position: fixed;
+  left: 50%;
+  bottom: var(--sp-4);
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: min(42rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.9rem;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-sm);
+}
+.boundary-warning[hidden] { display: none; }
+.boundary-warning-text { color: var(--ink); }
+.boundary-warning-close { flex: 0 0 auto; }
+
+/* Explain the limitation where the choice is made, instead of failing to highlight silently.
+   `:has()` is progressive enhancement — the banner above is the baseline. */
+body.reading-boundary-unsupported .accom-item:has([data-accom="read-along"]) strong::after,
+body.reading-speech-unsupported .accom-item:has([data-accom="read-along"]) strong::after {
+  content: " — unavailable in this browser";
+  font-weight: 500;
+  color: var(--ink-soft);
+}

@@ -131,6 +131,12 @@ Loaded **after** `tools.js` and **before** `tts.js`; initialised before tts by `
 - Key words: `.kw`, `.kw-num`
 - Overlay: `#reading-layer`, `.line-guide`, `.line-guide.dragging`
 - Simplified-text marker: `.lang-badge`
+- Degradation (browser never fires speech boundary events): body classes
+  `reading-boundary-unsupported` / `reading-speech-unsupported`, plus a notice `.boundary-warning`
+  (with `.boundary-warning-text`, `.boundary-warning-close`). `DC.reading.boundaryUnsupported`
+  is set to `true` once detected. Detection only judges prompts longer than 3 words, and only
+  after either `onEnd` with no boundary or a 3s silence while speaking — so it cannot fire on a
+  short prompt that legitimately ends without boundaries.
 
 ## Key-word detection (reading.js)
 Auto-detect inside the prompt text, never wrapping inside an existing span:

@@ -207,11 +207,58 @@ window.DC = window.DC || {};
     for (var i = 0; i < spans.length; i++) spans[i].classList.remove('speaking');
   }
 
+  /* ---------- graceful degradation ----------
+   * Some browsers (notably Safari, and Firefox in some builds) never fire
+   * SpeechSynthesisUtterance boundary events. When that happens read-along cannot
+   * track words. Say so plainly rather than silently failing to highlight.
+   */
+  var boundaryUnsupported = false;
+  var boundaryTimer = null;
+  var noticeEl = null;
+
+  function showReadingNotice(msg) {
+    if (!document.body) return;
+    if (noticeEl && noticeEl.parentNode) {
+      noticeEl.querySelector('.boundary-warning-text').textContent = msg;
+      noticeEl.hidden = false;
+      return;
+    }
+    var n = document.createElement('div');
+    n.className = 'boundary-warning';
+    n.setAttribute('role', 'status');
+    var t = document.createElement('span');
+    t.className = 'boundary-warning-text';
+    t.textContent = msg;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn-ghost boundary-warning-close';
+    b.setAttribute('aria-label', 'Dismiss this message');
+    b.textContent = 'Dismiss';
+    b.addEventListener('click', function () { n.hidden = true; });
+    n.appendChild(t);
+    n.appendChild(b);
+    document.body.appendChild(n);
+    noticeEl = n;
+  }
+
+  function markSpeechUnsupported() {
+    if (document.body) document.body.classList.add('reading-speech-unsupported');
+    showReadingNotice('This browser can\u2019t read text aloud, so read-along isn\u2019t available here. Every other support still works.');
+  }
+
+  function markBoundaryUnsupported() {
+    if (boundaryUnsupported) return;
+    boundaryUnsupported = true;
+    if (DC.reading) DC.reading.boundaryUnsupported = true;
+    if (document.body) document.body.classList.add('reading-boundary-unsupported');
+    showReadingNotice('This browser can\u2019t highlight words as they are spoken. The question is still read aloud, and every other support still works.');
+  }
+
   // Speak the current prompt with word-boundary tracking.
   // Returns true when handled; false when there is nothing to read / speech is unsupported.
   function speakCurrent() {
     if (!DC.tts || typeof DC.tts.speak !== 'function') return false;
-    if (!DC.tts.isSupported) return false;
+    if (!DC.tts.isSupported) { markSpeechUnsupported(); return false; }
     var textEl = document.querySelector('#quiz-root .prompt .prompt-text') ||
       document.querySelector('#quiz-root .prompt-text');
     if (!textEl) return false;
@@ -222,8 +269,23 @@ window.DC = window.DC || {};
     clearSpeakingIn(document.getElementById('quiz-root') || textEl);
     if (layer) clearSpeakingIn(layer);
 
+    if (boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer = null; }
+    // Only judge a prompt long enough that a working browser would certainly emit boundaries:
+    // a two-word prompt can legitimately finish without any.
+    var judgeable = words.length > 3;
+    var sawBoundary = false;
+    var judged = false;
+
+    function judge() {
+      if (judged) return;
+      judged = true;
+      if (boundaryTimer) { clearTimeout(boundaryTimer); boundaryTimer = null; }
+      if (judgeable && !sawBoundary) markBoundaryUnsupported();
+    }
+
     DC.tts.speak(text, {
       onBoundary: function (info) {
+        sawBoundary = true;
         var ci = (info && typeof info.charIndex === 'number') ? info.charIndex : -1;
         var covering = null;
         for (var i = 0; i < words.length; i++) {
@@ -236,8 +298,15 @@ window.DC = window.DC || {};
       },
       onEnd: function () {
         for (var i = 0; i < words.length; i++) words[i].el.classList.remove('speaking');
+        judge();
       }
     });
+
+    // Speech could still be running; if no boundary arrives in a generous window, stop
+    // waiting for a highlight that is never going to come.
+    if (judgeable && !sawBoundary) {
+      boundaryTimer = setTimeout(judge, 3000);
+    }
     return true;
   }
 
